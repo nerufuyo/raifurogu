@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "177386126258",
+    "project_id": "raifurogu-ad46a",
+    "storage_bucket": "raifurogu-ad46a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177386126258:android:b0aae6d9b247c2504c82ab",
+        "android_client_info": {
+          "package_name": "com.example.raifurogu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "177386126258-iq05a4te32gn47e16pmanjl2okio8laa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUgZreHCpIi_FQ4ZuWFRwvM6g7HkvQR0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "177386126258-iq05a4te32gn47e16pmanjl2okio8laa.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "177386126258-ni9n3krdr31ri4gpemc0ovtclvbt89up.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.raifurogu"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

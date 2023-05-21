@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:raifurogu/app/pages/edit/edit_page.dart';
+import 'package:raifurogu/app/pages/profile/profile_page.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,9 +18,37 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final searchInput = TextEditingController();
-  List number = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  List<dynamic> data = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getLocalData();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      getLocalData();
+    }
+  }
+
+  Future getLocalData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String dataString = prefs.getString('data') ?? '[]';
+    setState(() {
+      data = json.decode(dataString);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +64,8 @@ class _HomePageState extends State<HomePage> {
               crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
-              itemCount: number.length,
+              padding: const EdgeInsets.only(bottom: 24),
+              itemCount: data.length,
               itemBuilder: (context, index) {
                 return Container(
                   width: MediaQuery.of(context).size.width / 2,
@@ -47,7 +81,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Note Title',
+                            'test',
                             style: robotoH4,
                           ),
                           InkWell(
@@ -61,12 +95,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const VerticalGap10(),
                       Text(
-                        'lorem ipsum dolor sit amet consectetur adipiscing elit sed et dolore magna aliqua \n\nlorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua',
+                        'test',
                         style: robotoBody2,
                         maxLines: 8,
                       ),
                       const VerticalGap10(),
-                      Text('Sun, 21 March 2021', style: robotoCaption),
+                      Text('test', style: robotoCaption),
                     ],
                   ),
                 );
@@ -84,6 +118,7 @@ class _HomePageState extends State<HomePage> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -92,7 +127,9 @@ class _HomePageState extends State<HomePage> {
             style: robotoH2.copyWith(color: secondaryColor),
           ),
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.pushNamed(context, ProfilePage.routeName);
+            },
             child: CachedNetworkImage(
               imageUrl:
                   'https://images.pexels.com/photos/5378700/pexels-photo-5378700.jpeg',
@@ -157,9 +194,11 @@ class _HomePageState extends State<HomePage> {
 
   InkWell _floatingButtonWidget(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        Navigator.pushNamed(context, EditPage.routeName);
+      },
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.325,
+        width: MediaQuery.of(context).size.width / 3.25,
         decoration: BoxDecoration(
           color: secondaryColor,
           borderRadius: BorderRadius.circular(36),
