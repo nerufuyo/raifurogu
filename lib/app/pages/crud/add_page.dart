@@ -1,33 +1,31 @@
-import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:raifurogu/data/models/data_model.dart';
 
-class EditPage extends StatefulWidget {
-  const EditPage({super.key});
-  static const routeName = '/edit';
+class AddPage extends StatefulWidget {
+  const AddPage({super.key});
+  static const String routeName = '/add';
 
   @override
-  State<EditPage> createState() => _EditPageState();
+  State<AddPage> createState() => _AddPageState();
 }
 
-class _EditPageState extends State<EditPage> {
+class _AddPageState extends State<AddPage> {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
-  String formattedDate = DateFormat('EEEE, d MMMM y').format(DateTime.now());
+  final String formattedDate =
+      DateFormat('EEEE, d MMMM y').format(DateTime.now());
 
-  Future saveData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String> data = [
-      titleController.text,
-      formattedDate,
-      descriptionController.text,
-    ];
-    prefs.setString('data', json.encode(data));
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override
@@ -117,8 +115,23 @@ class _EditPageState extends State<EditPage> {
             right: 16,
             child: InkWell(
               onTap: () async {
-                await saveData();
-                Navigator.pop(context);
+                final firestoreService = FirebaseFirestore.instance;
+                final firebaseAuth = FirebaseAuth.instance;
+                final user = firebaseAuth.currentUser;
+                if (user == null) {
+                  return;
+                }
+                final data = DataModel(
+                  id: user.uid,
+                  title: titleController.text,
+                  description: descriptionController.text,
+                  date: formattedDate,
+                );
+
+                await FirebaseFirestore.instance
+                    .collection('data')
+                    .add(data.toFirestore())
+                    .then((value) => Navigator.pop(context));
               },
               child: Container(
                 decoration: BoxDecoration(

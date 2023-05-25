@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:raifurogu/app/pages/home/home_page.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
@@ -152,7 +153,24 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     InkWell(
-                      onTap: () {},
+                      onTap: () async {
+                        GoogleSignInAccount? account =
+                            await GoogleSignIn().signIn();
+
+                        if (account != null) {
+                          GoogleSignInAuthentication authentication =
+                              await account.authentication;
+                          OAuthCredential credential =
+                              GoogleAuthProvider.credential(
+                            accessToken: authentication.accessToken,
+                            idToken: authentication.idToken,
+                          );
+                          await FirebaseAuth.instance
+                              .signInWithCredential(credential)
+                              .then((value) => Navigator.pushNamed(
+                                  context, HomePage.routeName));
+                        }
+                      },
                       child: Image.asset(
                         'assets/google.png',
                         width: 36,

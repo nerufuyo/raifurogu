@@ -2,7 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:raifurogu/app/pages/authentication/login_page.dart';
 import 'package:raifurogu/app/pages/authentication/signup_page.dart';
-import 'package:raifurogu/app/pages/edit/edit_page.dart';
+import 'package:raifurogu/app/pages/crud/add_page.dart';
+import 'package:raifurogu/app/pages/crud/edit_page.dart';
 import 'package:raifurogu/app/pages/home/home_page.dart';
 import 'package:raifurogu/app/pages/profile/profile_page.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
@@ -33,6 +34,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const SignupPage());
           case HomePage.routeName:
             return MaterialPageRoute(builder: (_) => const HomePage());
+          case AddPage.routeName:
+            return MaterialPageRoute(builder: (_) => const AddPage());
           case EditPage.routeName:
             return MaterialPageRoute(builder: (_) => const EditPage());
           case ProfilePage.routeName:

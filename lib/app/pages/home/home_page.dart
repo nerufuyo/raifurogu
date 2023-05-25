@@ -1,14 +1,15 @@
-import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:raifurogu/app/pages/edit/edit_page.dart';
+import 'package:raifurogu/app/pages/crud/add_page.dart';
 import 'package:raifurogu/app/pages/profile/profile_page.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:raifurogu/data/models/data_model.dart';
+import 'package:raifurogu/data/repositories/repository.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,36 +19,20 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> {
+  final firestoreService = FirebaseFirestore.instance;
+  final auth = FirebaseAuth.instance;
   final searchInput = TextEditingController();
-  List<dynamic> data = [];
 
   @override
   void initState() {
     super.initState();
-    getLocalData();
-    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    searchInput.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      getLocalData();
-    }
-  }
-
-  Future getLocalData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String dataString = prefs.getString('data') ?? '[]';
-    setState(() {
-      data = json.decode(dataString);
-    });
   }
 
   @override
@@ -60,50 +45,72 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           child: Container(
             height: MediaQuery.of(context).size.height / 1.2,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: MasonryGridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              padding: const EdgeInsets.only(bottom: 24),
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  width: MediaQuery.of(context).size.width / 2,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: fourthColor,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'test',
-                            style: robotoH4,
-                          ),
-                          InkWell(
-                            onTap: () {},
-                            child: const Icon(
-                              Icons.more_horiz,
-                              color: secondaryColor,
+            child: StreamBuilder<List<DataModel>>(
+              stream: FirestoreService().getData(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Something went wrong'),
+                  );
+                }
+
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  final data = snapshot.data!;
+                  final filteredData = data
+                      .where((item) => item.id == auth.currentUser?.uid)
+                      .toList();
+                  return MasonryGridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    padding: const EdgeInsets.only(bottom: 24),
+                    itemCount: filteredData.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredData[index];
+                      return Container(
+                        width: MediaQuery.of(context).size.width / 2,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: fourthColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  item.title,
+                                  style: robotoH4,
+                                ),
+                                InkWell(
+                                  onTap: () {},
+                                  child: const Icon(
+                                    Icons.more_horiz,
+                                    color: secondaryColor,
+                                  ),
+                                )
+                              ],
                             ),
-                          )
-                        ],
-                      ),
-                      const VerticalGap10(),
-                      Text(
-                        'test',
-                        style: robotoBody2,
-                        maxLines: 8,
-                      ),
-                      const VerticalGap10(),
-                      Text('test', style: robotoCaption),
-                    ],
-                  ),
-                );
+                            const VerticalGap10(),
+                            Text(
+                              item.description,
+                              style: robotoBody2,
+                              maxLines: 8,
+                            ),
+                            const VerticalGap10(),
+                            Text(item.date, style: robotoCaption),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
@@ -195,7 +202,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   InkWell _floatingButtonWidget(BuildContext context) {
     return InkWell(
       onTap: () {
-        Navigator.pushNamed(context, EditPage.routeName);
+        Navigator.pushNamed(context, AddPage.routeName);
       },
       child: Container(
         width: MediaQuery.of(context).size.width / 3.25,
