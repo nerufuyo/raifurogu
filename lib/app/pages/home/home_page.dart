@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:raifurogu/app/pages/crud/add_page.dart';
+import 'package:raifurogu/app/pages/crud/edit_page.dart';
 import 'package:raifurogu/app/pages/profile/profile_page.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
@@ -23,11 +24,6 @@ class _HomePageState extends State<HomePage> {
   final firestoreService = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
   final searchInput = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -61,7 +57,7 @@ class _HomePageState extends State<HomePage> {
                 } else {
                   final data = snapshot.data!;
                   final filteredData = data
-                      .where((item) => item.id == auth.currentUser?.uid)
+                      .where((item) => item.userId == auth.currentUser?.uid)
                       .toList();
                   return MasonryGridView.count(
                     crossAxisCount: 2,
@@ -71,41 +67,93 @@ class _HomePageState extends State<HomePage> {
                     itemCount: filteredData.length,
                     itemBuilder: (context, index) {
                       final item = filteredData[index];
-                      return Container(
-                        width: MediaQuery.of(context).size.width / 2,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: fourthColor,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  item.title,
-                                  style: robotoH4,
-                                ),
-                                InkWell(
-                                  onTap: () {},
-                                  child: const Icon(
-                                    Icons.more_horiz,
-                                    color: secondaryColor,
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            EditPage.routeName,
+                            arguments: item.id,
+                          );
+                        },
+                        child: Container(
+                          width: MediaQuery.of(context).size.width / 2,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: fourthColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.title == ''
+                                          ? 'No Title'
+                                          : item.title,
+                                      style: robotoH4,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                )
-                              ],
-                            ),
-                            const VerticalGap10(),
-                            Text(
-                              item.description,
-                              style: robotoBody2,
-                              maxLines: 8,
-                            ),
-                            const VerticalGap10(),
-                            Text(item.date, style: robotoCaption),
-                          ],
+                                  PopupMenuButton(
+                                    elevation: 2,
+                                    icon: const Icon(
+                                      Icons.more_horiz_rounded,
+                                      color: secondaryColor,
+                                    ),
+                                    position: PopupMenuPosition.under,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    itemBuilder: (context) {
+                                      return [
+                                        PopupMenuItem(
+                                          onTap: () {
+                                            FirestoreService()
+                                                .deleteData(item.id);
+                                          },
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.delete_rounded,
+                                                color: Colors.red,
+                                              ),
+                                              const HorizontalGap5(),
+                                              Text(
+                                                'Delete',
+                                                style: robotoCaption.copyWith(
+                                                    color: Colors.red),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ];
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const VerticalGap10(),
+                              Text(
+                                item.description == ''
+                                    ? 'No Description'
+                                    : item.description,
+                                style: robotoBody2,
+                                maxLines: 8,
+                              ),
+                              const VerticalGap10(),
+                              Text(
+                                item.date,
+                                style: robotoCaption.copyWith(
+                                  color: secondaryColor.withOpacity(.5),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -156,7 +204,9 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               placeholder: (context, url) =>
-                  const Center(child: CircularProgressIndicator()),
+                  const Center(
+                child: CircularProgressIndicator(),
+              ),
               errorWidget: (context, url, error) => Container(
                 width: 44,
                 height: 44,
@@ -173,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
       bottom: PreferredSize(

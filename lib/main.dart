@@ -37,7 +37,8 @@ class MyApp extends StatelessWidget {
           case AddPage.routeName:
             return MaterialPageRoute(builder: (_) => const AddPage());
           case EditPage.routeName:
-            return MaterialPageRoute(builder: (_) => const EditPage());
+            final id = settings.arguments as String;
+            return MaterialPageRoute(builder: (_) => EditPage(id: id));
           case ProfilePage.routeName:
             return MaterialPageRoute(builder: (_) => const ProfilePage());
           default:

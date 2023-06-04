@@ -1,14 +1,17 @@
-import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
+import 'package:raifurogu/data/models/data_model.dart';
+import 'package:raifurogu/data/repositories/repository.dart';
 
 class EditPage extends StatefulWidget {
-  const EditPage({super.key});
+  const EditPage({super.key, required this.id});
   static const routeName = '/edit';
+  final String id;
 
   @override
   State<EditPage> createState() => _EditPageState();
@@ -17,58 +20,75 @@ class EditPage extends StatefulWidget {
 class _EditPageState extends State<EditPage> {
   final titleController = TextEditingController();
   final descriptionController = TextEditingController();
-  final String formattedDate =
-      DateFormat('EEEE, d MMMM y').format(DateTime.now());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.only(top: 100, left: 16, right: 16),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Title',
-                      hintStyle: robotoH1.copyWith(
-                        color: secondaryColor.withOpacity(.25),
-                      ),
+          StreamBuilder(
+            stream: FirestoreService().getDataById(widget.id),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text('Something went wrong'),
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              } else {
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
+                  padding: const EdgeInsets.only(top: 120, left: 16, right: 16),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: titleController
+                            ..text = snapshot.data!.title,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Title',
+                            hintStyle: robotoH1.copyWith(
+                              color: secondaryColor.withOpacity(.25),
+                            ),
+                          ),
+                          style: robotoH1,
+                        ),
+                        Text(
+                          snapshot.data!.date,
+                          style: robotoBody2.copyWith(
+                            color: secondaryColor.withOpacity(.75),
+                          ),
+                        ),
+                        const VerticalGap10(),
+                        TextField(
+                          controller: descriptionController
+                            ..text = snapshot.data!.description,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Description',
+                            hintStyle: robotoSubtitle1.copyWith(
+                              color: secondaryColor.withOpacity(.25),
+                            ),
+                          ),
+                          style: robotoSubtitle1,
+                          maxLines: 5,
+                        ),
+                      ],
                     ),
-                    style: robotoH1,
                   ),
-                  Text(
-                    formattedDate,
-                    style: robotoBody2.copyWith(
-                      color: secondaryColor.withOpacity(.75),
-                    ),
-                  ),
-                  const VerticalGap10(),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Description',
-                      hintStyle: robotoSubtitle1.copyWith(
-                        color: secondaryColor.withOpacity(.25),
-                      ),
-                    ),
-                    style: robotoSubtitle1,
-                    maxLines: 5,
-                  ),
-                ],
-              ),
-            ),
+                );
+              }
+            },
           ),
           Positioned(
-            top: 40,
+            top: 66,
             left: 16,
             right: 16,
             child: Row(
@@ -107,7 +127,13 @@ class _EditPageState extends State<EditPage> {
             right: 16,
             child: InkWell(
               onTap: () async {
-                Navigator.pop(context);
+                await FirestoreService()
+                    .updateData(
+                      widget.id,
+                      titleController.text,
+                      descriptionController.text,
+                    )
+                    .then((value) => Navigator.pop(context));
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -117,14 +143,14 @@ class _EditPageState extends State<EditPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   'Save',
-                  textAlign: TextAlign.center,
                   style: robotoH5.copyWith(
                     color: fourthColor,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

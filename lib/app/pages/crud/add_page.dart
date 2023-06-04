@@ -6,6 +6,7 @@ import 'package:raifurogu/app/styles/fonts.dart';
 import 'package:raifurogu/app/styles/gap.dart';
 import 'package:raifurogu/app/styles/pallets.dart';
 import 'package:raifurogu/data/models/data_model.dart';
+import 'package:raifurogu/data/repositories/repository.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
@@ -36,7 +37,7 @@ class _AddPageState extends State<AddPage> {
           Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.only(top: 100, left: 16, right: 16),
+            padding: const EdgeInsets.only(top: 120, left: 16, right: 16),
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -76,7 +77,7 @@ class _AddPageState extends State<AddPage> {
             ),
           ),
           Positioned(
-            top: 40,
+            top: 66,
             left: 16,
             right: 16,
             child: Row(
@@ -115,22 +116,28 @@ class _AddPageState extends State<AddPage> {
             right: 16,
             child: InkWell(
               onTap: () async {
-                final firestoreService = FirebaseFirestore.instance;
-                final firebaseAuth = FirebaseAuth.instance;
-                final user = firebaseAuth.currentUser;
+                final user = FirebaseAuth.instance.currentUser;
+                final firestore = await FirebaseFirestore.instance
+                    .collection('counters')
+                    .doc('data')
+                    .get()
+                    .then(
+                        (doc) => doc.exists ? doc.data()!['value'] as int : 0);
+
                 if (user == null) {
                   return;
                 }
+
                 final data = DataModel(
-                  id: user.uid,
+                  id: (firestore + 1).toString(),
+                  userId: user.uid,
                   title: titleController.text,
                   description: descriptionController.text,
                   date: formattedDate,
                 );
 
-                await FirebaseFirestore.instance
-                    .collection('data')
-                    .add(data.toFirestore())
+                FirestoreService()
+                    .addData(data)
                     .then((value) => Navigator.pop(context));
               },
               child: Container(
